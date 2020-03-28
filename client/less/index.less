@@ -1,0 +1,50 @@
+@darkAccent: #2A326D;       /* Dark blue */
+@lightAccent: #4E9FBC;
+@brightAccent: #D90707;
+@yellowAccent: #F4CF0D;
+@sandAccent: #DABD8F;
+@khakiAccent: #B38069;
+
+body {
+    color: #000;
+    padding: 0;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+header {
+    position: absolute;
+    color: #fff;
+    background-color: @darkAccent;
+    text-transform: uppercase;
+    height: 100px;
+    left: 0;
+    right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 65px;
+}
+
+#main-content {
+    min-height: 400px;
+    margin-top: 100px; /* Must match the header height */
+    margin-bottom: 30px; /* Must match the footer height */
+    padding: 30px;
+}
+
+.footer {
+    position: fixed;
+    height: 30px;
+    margin: 30px 0 0 0;
+    color: @darkAccent;
+    background-color: @lightAccent;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 30px;
+}
