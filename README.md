@@ -3,6 +3,18 @@ Pegs and Jokers - for the grandparents and their friends during the quarantine
 
 ## Getting Started
 
+This application will run on Windows, Mac and Linux.
+
+Assumptions:
+
+You have modern development tools.
+
+ - If on windows, you use a nicer command line prompt: https://conemu.github.io/
+ - You have installed git / git bash on your machine: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+ - You have installed Node.js. Use the latest LTS version: https://nodejs.org/en/download/
+ - You have a code editor. I recommend considering: https://code.visualstudio.com/download
+
+
 Enter the following commands (assumes you have git installed and are using http, feel free to use ssh keys as well)
 ```
 git clone https://github.com/seanmwalker/pegs-and-jokers.git
