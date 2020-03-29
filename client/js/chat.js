@@ -2,7 +2,7 @@
 import '../less/chat.less';
 
 export function initializeUI({ parentElement, client }) {
-    // Ugly hand coded UI. Consider react.
+    // Ugly hand coded UI. Consider React.
     const chatView = document.createElement('div');
     chatView.classList.add('chat-container');
     chatView.classList.add('col-2');
@@ -54,17 +54,16 @@ export function initializeUI({ parentElement, client }) {
 export function registerSubscriptions(client) {
     var subscription = client.subscribe('/chat/receive', function(message) {
         console.log('Received a chat message... ' + JSON.stringify(message));
+
+        const msg = document.createElement('div');
+        msg.classList.add('chat-message');
+        msg.innerHTML = message.from + ':' + message.text;
+
         if (message.to === 'everyone') {
-            const msg = document.createElement('div');
-            msg.classList.add('chat-message');
-            msg.innerHTML = 'From: ' + message.from + '<br/>' + message.text;    
             document.getElementById('global-chats').appendChild(msg);
         }
         else {
-            const msg = document.createElement('div');
-            msg.classList.add('chat-message');
-            msg.innerHTML = 'To: ' + message.recipient + '<br/>From: ' + message.from + '<br/>' + message.text;    
-            document.getElementById('global-chats').appendChild(msg);
+            document.getElementById('direct-chats').appendChild(msg);
 
         }
     });
