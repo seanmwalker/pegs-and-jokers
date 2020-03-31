@@ -1,7 +1,7 @@
 import { getShuffledDecksOfCards } from '../deck-of-cards';
 
 export function sendMessage({ message, client }) {    
-    client.publish('/game/receive', message);
+    client.publish('/game/client', message);
     console.log('Sent the message.' + JSON.stringify(message));
 }
 
@@ -12,7 +12,9 @@ export function getGameById(id) {
         return allGames[id];
     }
     else {
-        allGames[id] = {};
+        const newGame = {};
+        allGames[id] = newGame;
+        return newGame;
     }
 }
 
@@ -24,42 +26,47 @@ export function removeGameById(id) {
 
 export function registerSubscriptions(client) {
 
-    const gameSubscription = client.subscribe('/game/send', function(message) {
+    const gameSubscription = client.subscribe('/game/server', function(message) {
         console.log('Received a message. ' + JSON.stringify(message));        
 
         // When we support multiple concurrent games, we'll need this fixed. For now only one game will exist at a time.
         const gameId = 'theOneGameForNow';
 
-        switch (message.messageType) {
-            case 'choose-player':
-                choosePlayer(gameId, message);
-                break;
-                
-            case 'draw-card':
-                drawCard(gameId, message);
-                break;
-                
-            case 'create-game':
-                // Change the list of names to the object
-                createTheGame(gameId, message, client);
-                break;
-                
-            case 'play-card':
-                // Remove the card from the players hand
-                playTheCard(gameId, theGame, message, client);
-                break;
-                
-            case 'quit-game':
-                // Remove the state of the game.
-                quitTheGame(gameId, client);
-                break;
-            default: 
-                console.error('Unhandled message: ' + JSON.stringify(message));                
+        try {
+            switch (message.messageType) {
+                case 'choose-player':
+                    choosePlayer(gameId, message);
+                    break;
+                    
+                case 'draw-card':
+                    drawCard(gameId, message);
+                    break;
+                    
+                case 'create-game':
+                    // Change the list of names to the object
+                    createTheGame(gameId, message, client);
+                    break;
+                    
+                case 'play-card':
+                    // Remove the card from the players hand
+                    playTheCard(gameId, theGame, message, client);
+                    break;
+                    
+                case 'quit-game':
+                    // Remove the state of the game.
+                    quitTheGame(gameId, client);
+                    break;
+                default: 
+                    console.error('Unhandled message: ' + JSON.stringify(message));                
+            }
+        }
+        catch (e) {
+            console.error('Error processing message from client: ' + e.toString() + ' ' + e.stack);
         }
     });
 
     gameSubscription.then(function() {
-		console.log('Game subscription is activated!');
+		console.log('Game subscription to client requests is activated!');
 	});
 }
 
@@ -70,7 +77,7 @@ function getPlayerForGame(theGame, message) {
 function drawCard(gameId, message) {
     const theGame = exports.getGameById(gameId);
     const newCard = theGame.gameDeck.pop();
-    exports.sendMessage({
+    sendMessage({
         message: {
             messageType: 'card-drawn',
             newCard: newCard,
@@ -84,7 +91,7 @@ function choosePlayer(gameId, message) {
     const player = getPlayerForGame(theGame, message);
     player.isSelected = true;
 
-    exports.sendMessage({
+    sendMessage({
         message: {
             messageType: 'player-selected',
             players: theGame.players
@@ -94,12 +101,12 @@ function choosePlayer(gameId, message) {
     const allPlayersSelected = !theGame.players.find(p => !p.isSelected);
     if (allPlayersSelected) {
         theGame.players.forEach(player => {
-            for (const i = 0; i < 5; i++) {
+            for (let i = 0; i < 5; i++) {
                 player.hand.push(theGame.gameDeck.pop());
             }
         });
 
-        exports.sendMessage({
+        sendMessage({
             message: {
                 messageType: 'game-started',
                 players: theGame.players
@@ -111,7 +118,7 @@ function choosePlayer(gameId, message) {
 function quitTheGame(gameId, client) {
     exports.removeGameById(gameId);
     // Respond with the new status.
-    exports.sendMessage({
+    sendMessage({
         message: {
             messageType: 'game-over'
         },
@@ -124,7 +131,7 @@ function playTheCard(gameId, message, client) {
     const player = getPlayerForGame(theGame, message);
     player.hand = player.hand.filter(card => card.id === message.card.id);
     // Notify all users that the card has been played
-    exports.sendMessage({
+    sendMessage({
         message: {
             card: card,
             messageType: 'card-played',
@@ -143,7 +150,8 @@ function createTheGame(gameId, message, client) {
             isSelected: false
         };
     });
-    exports.sendMessage({
+
+    sendMessage({
         message: {
             messageType: 'game-created',
             players: theGame.players

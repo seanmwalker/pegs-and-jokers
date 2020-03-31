@@ -1,4 +1,4 @@
-import lodash from 'lodash';
+import _ from 'lodash';
 
 export const backOfCard =     {
     name: 'Back of card',
@@ -311,9 +311,9 @@ export const deck = [
 ];
 
 export function getShuffledDecksOfCards(numberOfDecks) {
-    const decks = [];
+    let decks = [];
 
-    for (const i = 0; i < numberOfDecks; i++) {
+    for (let i = 0; i < numberOfDecks; i++) {
         //Make a copy of the deck
         const newDeck = _.cloneDeep(exports.deck);
 
@@ -321,7 +321,7 @@ export function getShuffledDecksOfCards(numberOfDecks) {
         const shuffledDeck = _.shuffle(newDeck);
 
         // And add them to the other decks
-        decks = _.contat(decks, shuffledDeck);
+        decks = _.concat(decks, shuffledDeck);
     }
 
     // Since we will have duplicate cards with multiple decks. We need a unique id.

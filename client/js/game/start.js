@@ -4,12 +4,21 @@ import PropTypes from 'prop-types';
 export class Start extends Component {
 	constructor(props) {
 		super(props);
+
+		this.areGameSettingsValid = this.areGameSettingsValid.bind(this);
+		this.changePlayers = this.changePlayers.bind(this);
+		this.changePlayerCount = this.changePlayerCount.bind(this);
+		this.startTheGame = this.startTheGame.bind(this);
 		
 		this.state = {
 			canStartGame: false,
 			playerNames: [],
 			numberOfPlayers: 4
 		};
+	}
+
+	areGameSettingsValid({ playerNames, numberOfPlayers }) {
+		return playerNames.length === numberOfPlayers;
 	}
 
 	changePlayers(e) {
@@ -22,7 +31,7 @@ export class Start extends Component {
 
 		this.setState({ 
 			canStartGame: canStartGame,
-			playerNames: names
+			playerNames: playerNames
 		});
 	}
 
@@ -40,7 +49,7 @@ export class Start extends Component {
 		});
 	}
 	startTheGame() {
-		props.start({ 
+		this.props.start({ 
 			numberOfPlayers: this.state.numberOfPlayers,
 			playerNames: this.state.playerNames
 		});
@@ -61,10 +70,10 @@ export class Start extends Component {
 				<br/>
 				<br/>
 				<label>List the players by name:</label>
-				<textArea onChange={this.changePlayers} placeholder="Enter players names one per line"></textArea>
+				<textarea onChange={this.changePlayers} placeholder="Enter players names one per line"></textarea>
 				<br/>
 				<br/>
-				<button onClick={this.startTheGame} disabled={this.state.canStartGame ? '' : 'disabled'}>Start</button>
+				<button onClick={this.startTheGame} disabled={!this.state.canStartGame}>Start</button>
 			</div>
 		);
 	}

@@ -3,10 +3,7 @@ import PropTypes from 'prop-types';
 import { Start } from './start';
 import { ChooseMyPlayer } from './choose-my-player';
 import { Cards } from './cards';
-
-export const gameStateNew = 'not-started';
-export const gameStatePickingNames = 'picking-names';
-export const gameStatePlaying = 'playing';
+import { GAME_STATE_NEW, GAME_STATE_PICKING_NAMES } from './constants';
 
 export class DisplayGame extends Component {
 	constructor(props) {
@@ -14,7 +11,7 @@ export class DisplayGame extends Component {
 	}
 
 	render() {
-		const ComponentToRender = this.props.gameState === gameStateNew ? Start : this.props.gameState === gameStatePickingNames ? ChooseMyPlayer : Cards;
+		const ComponentToRender = this.props.gameState === GAME_STATE_NEW ? Start : this.props.gameState === GAME_STATE_PICKING_NAMES ? ChooseMyPlayer : Cards;
         return (<ComponentToRender {...this.props} />);
     }
 }

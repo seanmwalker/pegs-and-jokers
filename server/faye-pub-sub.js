@@ -1,5 +1,6 @@
 import faye from 'faye';
 import* as chat from './faye/chat';
+import* as game from './faye/game';
 
 export function initializeFaye(server) {
     const bayeux = new faye.NodeAdapter({
@@ -14,6 +15,7 @@ export function initializeFaye(server) {
     // Add extensions here if needed. See commented text below.
     
     chat.registerSubscriptions(client);
+    game.registerSubscriptions(client);
 
     bayeux.on('handshake', function (clientId) {
         console.log('Client connected', clientId);
