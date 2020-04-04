@@ -1,4 +1,15 @@
 import { getShuffledDecksOfCards } from '../deck-of-cards';
+import { EVENT_CHOOSE_PLAYER,
+    EVENT_DRAW_CARD,
+    EVENT_QUIT_GAME,
+    EVENT_PLAY_CARD, 
+    EVENT_CREATE_GAME,
+    CARD_DRAWN,
+    CARD_PLAYED,
+    GAMES_NEEDING_PLAYERS_UPDATED,
+    GAME_OVER,
+    PLAYER_SELECTED
+} from '../constants';
 
 export function sendMessage({ message, client }) {    
     client.publish('/game/client', message);
@@ -18,6 +29,17 @@ export function getGameById(id) {
     }
 }
 
+export function getGamesNeedingPlayers() {
+    const results = [];
+    Object.keys(allGames).forEach(g => {
+        if (g.players && g.players.find(p => !p.isSelected)) {
+            results.push(g);
+        }
+    });
+
+    return results;
+}
+
 export function removeGameById(id) {
     if (allGames[id]) {
         delete allGames[id];
@@ -29,32 +51,29 @@ export function registerSubscriptions(client) {
     const gameSubscription = client.subscribe('/game/server', function(message) {
         console.log('Received a message. ' + JSON.stringify(message));        
 
-        // When we support multiple concurrent games, we'll need this fixed. For now only one game will exist at a time.
-        const gameId = 'theOneGameForNow';
-
         try {
             switch (message.messageType) {
-                case 'choose-player':
-                    choosePlayer(gameId, message);
+                case EVENT_CHOOSE_PLAYER:
+                    choosePlayer({ client, message });
                     break;
                     
-                case 'draw-card':
-                    drawCard(gameId, message);
+                case EVENT_DRAW_CARD:
+                    drawCard({ client, message });
                     break;
                     
-                case 'create-game':
+                case EVENT_CREATE_GAME:
                     // Change the list of names to the object
-                    createTheGame(gameId, message, client);
+                    createTheGame({ client, message });
                     break;
                     
-                case 'play-card':
+                case EVENT_PLAY_CARD:
                     // Remove the card from the players hand
-                    playTheCard(gameId, theGame, message, client);
+                    playTheCard({ client, theGame, message });
                     break;
                     
-                case 'quit-game':
+                case EVENT_QUIT_GAME:
                     // Remove the state of the game.
-                    quitTheGame(gameId, client);
+                    quitTheGame({ client, gameId });
                     break;
                 default: 
                     console.error('Unhandled message: ' + JSON.stringify(message));                
@@ -71,35 +90,43 @@ export function registerSubscriptions(client) {
 }
 
 function getPlayerForGame(theGame, message) {
-    return theGame.players.find(e => e.name === message.playersName);
+    return theGame.players.find(e => e.name === message.playerName);
 }
 
-function drawCard(gameId, message) {
+function drawCard({ client, message }) {
     const theGame = exports.getGameById(gameId);
     const newCard = theGame.gameDeck.pop();
     sendMessage({
+        client, 
         message: {
-            messageType: 'card-drawn',
+            messageType: CARD_DRAWN,
             newCard: newCard,
             playerName: message.playerName
         }
     });
 }
 
-function choosePlayer(gameId, message) {
+function choosePlayer({ client, message }) {
     const theGame = exports.getGameById(gameId);
     const player = getPlayerForGame(theGame, message);
+    player.team = message.team;
     player.isSelected = true;
 
     sendMessage({
+        client, 
         message: {
-            messageType: 'player-selected',
-            players: theGame.players
+            messageType: PLAYER_SELECTED,
+            players: theGame.players,
+            gamesNeedingPlayers: getGamesNeedingPlayers()
         }
     });
 
     const allPlayersSelected = !theGame.players.find(p => !p.isSelected);
     if (allPlayersSelected) {
+        // Create the deck
+        theGame.gameDeck = getShuffledDecksOfCards(message.numberOfPlayers / 2);
+
+        // Give the players their cards
         theGame.players.forEach(player => {
             for (let i = 0; i < 5; i++) {
                 player.hand.push(theGame.gameDeck.pop());
@@ -107,6 +134,7 @@ function choosePlayer(gameId, message) {
         });
 
         sendMessage({
+            client, 
             message: {
                 messageType: 'game-started',
                 players: theGame.players
@@ -115,46 +143,51 @@ function choosePlayer(gameId, message) {
     }
 }
 
-function quitTheGame(gameId, client) {
+function quitTheGame({ client, gameId }) {
     exports.removeGameById(gameId);
     // Respond with the new status.
     sendMessage({
+        client, 
         message: {
-            messageType: 'game-over'
+            messageType: GAME_OVER
         },
         client
     });
 }
 
-function playTheCard(gameId, message, client) {
+function playTheCard({ client, message }) {
     const theGame = exports.getGameById(gameId);
     const player = getPlayerForGame(theGame, message);
     player.hand = player.hand.filter(card => card.id === message.card.id);
     // Notify all users that the card has been played
     sendMessage({
+        client, 
         message: {
             card: card,
-            messageType: 'card-played',
+            messageType: CARD_PLAYED,
             player: player
         },
         client
     });
 }
-
-function createTheGame(gameId, message, client) {
-    const theGame = exports.getGameById(gameId);
-    theGame.gameDeck = getShuffledDecksOfCards(message.numberOfPlayers / 2);
+//gamesNeedingPlayers
+function createTheGame({ client, message }) {
+    // We need to make a game
+    const theGame = exports.getGameById(message.gameId);
+    theGame.teams = message.teams;
     theGame.players = message.playerNames.map(p => {
         return {
             name: p,
+            team: undefined,
             isSelected: false
         };
     });
 
     sendMessage({
+        client, 
         message: {
-            messageType: 'game-created',
-            players: theGame.players
+            messageType: GAMES_NEEDING_PLAYERS_UPDATED,
+            gamesNeedingPlayers: getGamesNeedingPlayers()
         },
         client
     });

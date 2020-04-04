@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { createStore } from 'redux'
 import { connect } from 'react-redux';
 import { reducers } from './redux/reducers';
-import { notifyPublishStateChange, processMessage } from './redux/actions';
+import { notifyPublishStateChange, processMessage, setGameId, showPickingPlayers } from './redux/actions';
 import { GameProvider } from './game-provider';
 import {
     EVENT_CHOOSE_PLAYER,
@@ -12,20 +12,19 @@ import {
     EVENT_PLAY_CARD,
     EVENT_CREATE_GAME,
     GAME_STATE_NEW
-} from './constants';
+} from '../../../server/constants';
 
 import '../../less/game.less';
 
 export function setup({ parentElement, client }) {
     const initialState = {
         faceUpCard: undefined,
+        gamesNeedingPlayers: [],
         gameState: GAME_STATE_NEW,
         hand: [],
         myPlayersName: '',
         players: []
     };
-
-    subscribeToGameMessages(client);
 
     // Make the div that our game space will be rendered in
     const div = createGameDiv(parentElement);
@@ -39,6 +38,9 @@ export function setup({ parentElement, client }) {
     const mapDispatchToProps = mapDispatchToPropsForMessaging(initialState, client)
 
     const store = createStore(reducers, initialState)
+    window.store = store;
+
+    subscribeToGameMessages({ client, dispatch: store.dispatch });
 
     const ConnectedGameProvider = connect(
         mapStateToProps,
@@ -49,7 +51,7 @@ export function setup({ parentElement, client }) {
 }
 
 export function sendMessageToServer({ client, message }) {
-    client.publish('/game/server', message)
+    return client.publish('/game/server', message)
     .then(() => {
         console.log('Message sent to server.');
     })
@@ -70,17 +72,21 @@ export function createGameDiv(parentElement) {
 export function mapDispatchToPropsForMessaging(initialState, client) {
     return dispatch => {
         return {
-            choosePlayer: (playerName) => {
+            choosePlayer: ({ team, playerName }) => {
                 initialState.myPlayersName = playerName;
+
                 sendMessageToServer({
                     client,
                     message: {
                         messageType: EVENT_CHOOSE_PLAYER,
+                        team: team,
                         playerName: playerName
                     }
                 });
+
                 dispatch(notifyPublishStateChange(EVENT_CHOOSE_PLAYER));
             },
+
             drawCard: (playerName) => {
                 sendMessageToServer({
                     client,
@@ -89,8 +95,10 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                         playerName: playerName
                     }
                 });
+
                 dispatch(notifyPublishStateChange(EVENT_DRAW_CARD));
             },
+
             end: () => {
                 sendMessageToServer({
                     client,
@@ -98,8 +106,10 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                         messageType: EVENT_QUIT_GAME
                     }
                 });
+
                 dispatch(notifyPublishStateChange(EVENT_QUIT_GAME));
             },
+
             playCard: (card) => {
                 sendMessageToServer({
                     client,
@@ -109,27 +119,41 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                         playersName: myPlayersName
                     }
                 });
+
                 dispatch(notifyPublishStateChange(EVENT_PLAY_CARD));
             },
-            start: ({ numberOfPlayers, playerNames }) => {
+
+            showChoosePlayers: (gameId) => {
+                dispatch(showPickingPlayers(gameId));
+            },
+
+            start: ({ gameId, numberOfPlayers, playerNames, teamA, teamB }) => {
+                dispatch(setGameId(gameId));
+
                 sendMessageToServer({
                     client,
                     message: {
+                        gameId: gameId,
                         messageType: EVENT_CREATE_GAME,
                         numberOfPlayers: numberOfPlayers,
-                        playerNames: playerNames
+                        playerNames: playerNames,
+                        teams: {
+                            a: teamA,
+                            b: teamB
+                        }
                     }
                 });
+
                 dispatch(notifyPublishStateChange(EVENT_CREATE_GAME));
             }
         };
     };
 }
 
-export function subscribeToGameMessages(client) {
+export function subscribeToGameMessages({ client, dispatch }) {
     client.subscribe('/game/client', function (message) {
         console.log('Game message came in: ' + JSON.stringify(message));
-        processMessage(message);
+        dispatch(processMessage(message));
     })
         .then(function () {
             console.log('Game subscriptionto the server is activated!');

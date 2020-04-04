@@ -15,16 +15,16 @@ export class ChooseMyPlayer extends Component {
 	}
 
 	changePlayers(e) {
-		const playerNames = e.target.value.trim().split('\n').filter(n => n && n.length);
+		const players = e.target.value.trim().split('\n').filter(n => n && n.length);
 
 		const canStartGame = this.areGameSettingsValid({ 
-			playerNames: playerNames,
+			players: players,
 			numberOfPlayers: this.state.numberOfPlayers
 		})
 
 		this.setState({ 
 			canStartGame: canStartGame,
-			playerNames: names
+			players: names
 		});
 	}
 
@@ -32,7 +32,7 @@ export class ChooseMyPlayer extends Component {
 		const numberOfPlayers = parseInt(e.target.value);
 
 		const canStartGame = this.areGameSettingsValid({ 
-			playerNames: this.state.playerNames,
+			players: this.state.players,
 			numberOfPlayers:numberOfPlayers
 		})
 
@@ -44,19 +44,36 @@ export class ChooseMyPlayer extends Component {
 	startTheGame() {
 		props.start({ 
 			numberOfPlayers: this.state.numberOfPlayers,
-			players: this.state.playerNames
+			players: this.state.players
 		});
 	}
 
+	isTeamFull({ team, numPlayersToBeFull }) {
+		const teamPlayerCount = this.props.players.find(p => p.team === this.props.teams[team]);
+		return teamPlayerCount >= numPlayersToBeFull;
+	}
+
 	render() {
+		const numPlayersToBeFull = players.length / 2;
+		const isTeamAFull = isTeamFull({ team: 'a', numPlayersToBeFull });
+		const isTeamBFull = isTeamFull({ team: 'b', numPlayersToBeFull });
+		
 		return (
-			<div className="plaers-list">
+			<div className="players-list">
 				<h2>Select your player</h2>
 				<p>Now you need to click on your name below. When everyone has selected their player we will be able to begin.</p>
-                {this.props.playerNames.map(player => 
-                    <button className="select-player" onClick={() => {
-                        this.choosePlayer(player.name);
-                    }} disabled={player.isSelected}>{player.name}</button>
+				{this.props.players.map((player, index) => 
+					<div>
+						<button key={index} className="select-player" onClick={() => {
+							this.props.choosePlayer({ team: teams.a, playerName: player.name });
+						}} disabled={player.isSelected || isTeamAFull}>Join {teams.a}</button>
+						
+						{player.name}
+
+						<button key={index} className="select-player" onClick={() => {
+							this.props.choosePlayer({ team: teams.b, playerName: player.name });
+						}} disabled={player.isSelected || isTeamBFull}>Join {teams.b}</button>
+					</div>
                 )}
 			</div>
 		);
@@ -64,5 +81,7 @@ export class ChooseMyPlayer extends Component {
 }
 
 ChooseMyPlayer.propTypes = {
-	choosePlayer: PropTypes.func
+	choosePlayer: PropTypes.func,
+	players: PropTypes.array,
+	teams: PropTypes.object
 };
