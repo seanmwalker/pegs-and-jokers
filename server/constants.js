@@ -1,9 +1,10 @@
 // Messages from client to server
 export const EVENT_CHOOSE_PLAYER = 'choose-player';
-export const EVENT_DRAW_CARD = 'draw-card';
-export const EVENT_QUIT_GAME = 'quit-game';
-export const EVENT_PLAY_CARD = 'play-card';
 export const EVENT_CREATE_GAME = 'create-game';
+export const EVENT_DRAW_CARD = 'draw-card';
+export const EVENT_JOIN_GAME = 'join-game';
+export const EVENT_PLAY_CARD = 'play-card';
+export const EVENT_QUIT_GAME = 'quit-game';
 
 // Messages from server to client
 export const CARD_DRAWN = 'card-drawn';

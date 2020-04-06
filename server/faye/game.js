@@ -31,9 +31,10 @@ export function getGameById(id) {
 
 export function getGamesNeedingPlayers() {
     const results = [];
-    Object.keys(allGames).forEach(g => {
-        if (g.players && g.players.find(p => !p.isSelected)) {
-            results.push(g);
+    Object.keys(allGames).forEach(name => {
+        const game = allGames[name]
+        if (game.players && game.players.find(p => !p.isSelected)) {
+            results.push(game);
         }
     });
 
@@ -44,6 +45,16 @@ export function removeGameById(id) {
     if (allGames[id]) {
         delete allGames[id];
     }
+}
+
+export function updateNewClient({ client, clientId }) {
+    sendMessage({
+        client, 
+        message: {
+            messageType: GAMES_NEEDING_PLAYERS_UPDATED,
+            gamesNeedingPlayers: getGamesNeedingPlayers()
+        }
+    });
 }
 
 export function registerSubscriptions(client) {
@@ -150,8 +161,7 @@ function quitTheGame({ client, gameId }) {
         client, 
         message: {
             messageType: GAME_OVER
-        },
-        client
+        }
     });
 }
 
@@ -166,14 +176,14 @@ function playTheCard({ client, message }) {
             card: card,
             messageType: CARD_PLAYED,
             player: player
-        },
-        client
+        }
     });
 }
 //gamesNeedingPlayers
 function createTheGame({ client, message }) {
     // We need to make a game
     const theGame = exports.getGameById(message.gameId);
+    theGame.gameId = message.gameId;
     theGame.teams = message.teams;
     theGame.players = message.playerNames.map(p => {
         return {
@@ -188,7 +198,6 @@ function createTheGame({ client, message }) {
         message: {
             messageType: GAMES_NEEDING_PLAYERS_UPDATED,
             gamesNeedingPlayers: getGamesNeedingPlayers()
-        },
-        client
+        }
     });
 }

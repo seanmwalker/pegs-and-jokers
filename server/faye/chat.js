@@ -13,3 +13,7 @@ export function registerSubscriptions(client) {
 		console.log('Chat subscription is activated!');
 	});
 }
+
+export function updateNewClient({ client, clientId }) {
+
+}

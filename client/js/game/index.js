@@ -3,14 +3,21 @@ import ReactDOM from 'react-dom';
 import { createStore } from 'redux'
 import { connect } from 'react-redux';
 import { reducers } from './redux/reducers';
-import { notifyPublishStateChange, processMessage, setGameId, showPickingPlayers } from './redux/actions';
+import {
+    notifyPublishStateChange,
+    processMessage,
+    setGameId,
+    showPickingPlayers,
+    joinGame
+} from './redux/actions';
 import { GameProvider } from './game-provider';
 import {
     EVENT_CHOOSE_PLAYER,
-    EVENT_DRAW_CARD,
-    EVENT_QUIT_GAME,
-    EVENT_PLAY_CARD,
     EVENT_CREATE_GAME,
+    EVENT_DRAW_CARD,
+    EVENT_JOIN_GAME,
+    EVENT_PLAY_CARD,
+    EVENT_QUIT_GAME,
     GAME_STATE_NEW
 } from '../../../server/constants';
 
@@ -23,7 +30,8 @@ export function setup({ parentElement, client }) {
         gameState: GAME_STATE_NEW,
         hand: [],
         myPlayersName: '',
-        players: []
+        players: [],
+        teams: {}
     };
 
     // Make the div that our game space will be rendered in
@@ -53,7 +61,7 @@ export function setup({ parentElement, client }) {
 export function sendMessageToServer({ client, message }) {
     return client.publish('/game/server', message)
     .then(() => {
-        console.log('Message sent to server.');
+        console.log('Message sent to server.: ' + JSON.stringify(message));
     })
     .catch(e => {
         console.error('Message to server failed: ' + e.toString());
@@ -145,6 +153,11 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                 });
 
                 dispatch(notifyPublishStateChange(EVENT_CREATE_GAME));
+            },
+
+            join: (gameId) => {
+                dispatch(joinGame(gameId));
+                dispatch(notifyPublishStateChange(EVENT_JOIN_GAME));
             }
         };
     };
@@ -156,6 +169,6 @@ export function subscribeToGameMessages({ client, dispatch }) {
         dispatch(processMessage(message));
     })
         .then(function () {
-            console.log('Game subscriptionto the server is activated!');
+            console.log('Game subscription to the server is activated! args=' + JSON.stringify(arguments));
         });
 }

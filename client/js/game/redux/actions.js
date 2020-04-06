@@ -1,4 +1,4 @@
-import { GAME_UI_STATE, SET_GAME_ID } from '../../../../server/constants';
+import { GAME_SELECTED, GAME_STATE_PICKING_NAMES, GAME_UI_STATE, SET_GAME_ID } from '../../../../server/constants';
 
 // This one action should solve for all of the Faye pub sub messaging.
 export function processMessage(message) {
@@ -14,6 +14,12 @@ export function showPickingPlayers(gameId) {
     }
 }
 
+export function joinGame(gameId) {
+    return {
+        type: GAME_SELECTED,
+        gameId: gameId
+    };
+}
 export function setGameId(gameId) {
     return {
         type: SET_GAME_ID,

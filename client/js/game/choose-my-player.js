@@ -7,7 +7,8 @@ export class ChooseMyPlayer extends Component {
         
         this.changePlayers = this.changePlayers.bind(this);
         this.changePlayerCount = this.changePlayerCount.bind(this);
-        this.startTheGame = this.startTheGame.bind(this);
+		this.startTheGame = this.startTheGame.bind(this);
+		this.isTeamFull = this.isTeamFull.bind(this);
 		
 		this.state = {
 			myPlayerName: ''
@@ -54,25 +55,27 @@ export class ChooseMyPlayer extends Component {
 	}
 
 	render() {
-		const numPlayersToBeFull = players.length / 2;
-		const isTeamAFull = isTeamFull({ team: 'a', numPlayersToBeFull });
-		const isTeamBFull = isTeamFull({ team: 'b', numPlayersToBeFull });
+		const numPlayersToBeFull = this.props.players.length / 2;
+		const isTeamAFull = this.isTeamFull({ team: 'a', numPlayersToBeFull });
+		const isTeamBFull = this.isTeamFull({ team: 'b', numPlayersToBeFull });
 		
 		return (
 			<div className="players-list">
 				<h2>Select your player</h2>
 				<p>Now you need to click on your name below. When everyone has selected their player we will be able to begin.</p>
 				{this.props.players.map((player, index) => 
-					<div>
+					<div className="player-pick-teams">
 						<button key={index} className="select-player" onClick={() => {
-							this.props.choosePlayer({ team: teams.a, playerName: player.name });
-						}} disabled={player.isSelected || isTeamAFull}>Join {teams.a}</button>
+							this.props.choosePlayer({ team: this.props.teams.a, playerName: player.name });
+						}} disabled={player.isSelected || isTeamAFull}>Join {this.props.teams.a}</button>
 						
-						{player.name}
+						<span className="players-name">
+							{player.name}
+						</span>
 
 						<button key={index} className="select-player" onClick={() => {
-							this.props.choosePlayer({ team: teams.b, playerName: player.name });
-						}} disabled={player.isSelected || isTeamBFull}>Join {teams.b}</button>
+							this.props.choosePlayer({ team: this.props.teams.b, playerName: player.name });
+						}} disabled={player.isSelected || isTeamBFull}>Join {this.props.teams.b}</button>
 					</div>
                 )}
 			</div>

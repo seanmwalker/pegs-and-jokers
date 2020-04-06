@@ -12,6 +12,7 @@ export class Start extends Component {
 		this.updateGameName = this.updateGameName.bind(this);
 		this.updateTeamAName = this.updateTeamAName.bind(this);
 		this.updateTeamBName = this.updateTeamBName.bind(this);
+		this.joinThisGame = this.joinThisGame.bind(this);
 		
 		this.state = {
 			canStartGame: false,
@@ -68,9 +69,16 @@ export class Start extends Component {
 
 	startTheGame() {
 		this.props.start({ 
+			gameId: this.state.gameId,
 			numberOfPlayers: this.state.numberOfPlayers,
-			playerNames: this.state.playerNames
+			playerNames: this.state.playerNames,
+			teamA: this.state.teamA,
+			teamB: this.state.teamB
 		});
+	}
+
+	joinThisGame(gameId) {
+		this.props.join(gameId);
 	}
 
 	updateGameName(e) {
@@ -153,19 +161,24 @@ export class Start extends Component {
 					<p>
 						The following games are waiting for people to join so they can start playing!
 					</p>
-					<div className="games-waiting-for-players">
-						{this.props.gamesNeedingPlayers.map(g =>
-							<div onClick={() => { this.props.showChoosePlayers(g.gameId); }}>
-								{g.name}
+					<div className="games-waiting-for-players d-flex align-items-stretch">
+						{this.props.gamesNeedingPlayers.map((game, key) =>
+							<div key={key} className="game" onClick={() => { this.props.showChoosePlayers(game.gameId); }}>
+								<h3>Game: <b>{game.gameId}</b></h3>
+								<button className="text-center join-game" onClick={() => {
+									this.joinThisGame(game.gameId);
+									}}>Join</button>
 								<br/>
-								{g.players.map((player, index) => 
-									<span key={index} className={'badge badge-' + (player.isSelected ? 'primary' : 'info')}>{player.name}</span>
-								)}
+								{game.players.map((player, index) => 
+									<div key={index}>Player: 
+										<span className={'badge badge-' + (player.isSelected ? 'primary' : 'info')}>{player.name}</span>
+									</div>
+					 			)}
 							</div>
 						)}
 
 						{!this.props.gamesNeedingPlayers.length && 
-							<div className="badge badge-info">No games waiting for players.</div>
+							<div className="alert alert-info">No games waiting for players.</div>
 						}
 					</div>
 				</div>
@@ -176,6 +189,7 @@ export class Start extends Component {
 
 Start.propTypes = {
 	gamesNeedingPlayers: PropTypes.array,
+	join: PropTypes.func,
 	start: PropTypes.func,
 	showChoosePlayers: PropTypes.func
 };

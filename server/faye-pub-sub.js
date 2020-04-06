@@ -19,10 +19,14 @@ export function initializeFaye(server) {
 
     bayeux.on('handshake', function (clientId) {
         console.log('Client connected', clientId);
+
+        // Give the client some time to finish its connection
+        setTimeout(() => {
+            chat.updateNewClient({ client, clientId });
+            game.updateNewClient({ client, clientId });
+        }, 1000);
     });
 }
-
-
 
 // NOTE: If we need to handle authentication or other session stuff, extensions are good for that.
 // bayeux.addExtension({
