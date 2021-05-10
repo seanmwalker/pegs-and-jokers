@@ -44,6 +44,7 @@ export class ChooseMyPlayer extends Component {
 	}
 	startTheGame() {
 		props.start({ 
+			gameId: this.props.gameId,
 			numberOfPlayers: this.state.numberOfPlayers,
 			players: this.state.players
 		});
@@ -64,17 +65,17 @@ export class ChooseMyPlayer extends Component {
 				<h2>Select your player</h2>
 				<p>Now you need to click on your name below. When everyone has selected their player we will be able to begin.</p>
 				{this.props.players.map((player, index) => 
-					<div className="player-pick-teams">
-						<button key={index} className="select-player" onClick={() => {
-							this.props.choosePlayer({ team: this.props.teams.a, playerName: player.name });
+					<div className="player-pick-teams" key={index}>
+						<button key={index + '-a'} className="select-player" onClick={() => {
+							this.props.choosePlayer({ gameId: this.props.gameId, team: this.props.teams.a, playerName: player.name });
 						}} disabled={player.isSelected || isTeamAFull}>Join {this.props.teams.a}</button>
 						
 						<span className="players-name">
 							{player.name}
 						</span>
 
-						<button key={index} className="select-player" onClick={() => {
-							this.props.choosePlayer({ team: this.props.teams.b, playerName: player.name });
+						<button key={index + '-b'} className="select-player" onClick={() => {
+							this.props.choosePlayer({ gameId: this.props.gameId, team: this.props.teams.b, playerName: player.name });
 						}} disabled={player.isSelected || isTeamBFull}>Join {this.props.teams.b}</button>
 					</div>
                 )}
@@ -85,6 +86,7 @@ export class ChooseMyPlayer extends Component {
 
 ChooseMyPlayer.propTypes = {
 	choosePlayer: PropTypes.func,
+	gameId: PropTypes.string,
 	players: PropTypes.array,
 	teams: PropTypes.object
 };

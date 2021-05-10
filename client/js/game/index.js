@@ -18,7 +18,8 @@ import {
     EVENT_JOIN_GAME,
     EVENT_PLAY_CARD,
     EVENT_QUIT_GAME,
-    GAME_STATE_NEW
+    GAME_STATE_NEW,
+    GAME_OVER
 } from '../../../server/constants';
 
 import '../../less/game.less';
@@ -77,15 +78,63 @@ export function createGameDiv(parentElement) {
     return div;
 }
 
+export function getCookieValue(value) {
+    const cookies = document.cookie.split(';');
+
+    for (let i = 0; i < cookies.length; i++) {
+        let pieces = cookies[i].split('=');
+
+        if (pieces[0]==value) {
+            return pieces[1];
+
+        }
+    };
+
+    return '';
+}
+
+export function setCookieValue({ name, value }) {
+    document.cookie = name + '=' + value + ';max-age=' + 60 * 60 * 12;
+}
+
+export const cookies = {
+    gameId: 'gameId',
+    playersName: 'playersName'
+};
+
+export function getGameIdCookie() {
+    return exports.getCookieValue(cookies.gameId);
+}
+
+
+export function setGameIdCookie(gameId) {
+    exports.setCookieValue({ name: cookies.gameId, value: gameId });
+}
+
+export function getPlayerNameCookie() {
+    return exports.getCookieValue('playerName');
+}
+
+export function setPlayersNameCookie(name) {
+    exports.setCookieValue({ name: cookies.playersName, value: name });
+}
+
+export function clearCookies() {
+    document.cookie = cookies.gameId + '=;expires=Sat, 01 Jan 2000 06:00:00 GMT';
+    document.cookie = cookies.playersName + '=;expires=Sat, 01 Jan 2000 06:00:00 GMT';
+}
+
 export function mapDispatchToPropsForMessaging(initialState, client) {
     return dispatch => {
         return {
-            choosePlayer: ({ team, playerName }) => {
+            choosePlayer: ({ gameId, team, playerName }) => {
                 initialState.myPlayersName = playerName;
+                exports.setPlayersNameCookie(playerName);
 
                 sendMessageToServer({
                     client,
                     message: {
+                        gameId: gameId,
                         messageType: EVENT_CHOOSE_PLAYER,
                         team: team,
                         playerName: playerName
@@ -95,10 +144,11 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                 dispatch(notifyPublishStateChange(EVENT_CHOOSE_PLAYER));
             },
 
-            drawCard: (playerName) => {
+            drawCard: ({ gameId, playerName }) => {
                 sendMessageToServer({
                     client,
                     message: {
+                        gameId: gameId,
                         messageType: EVENT_DRAW_CARD,
                         playerName: playerName
                     }
@@ -107,10 +157,11 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                 dispatch(notifyPublishStateChange(EVENT_DRAW_CARD));
             },
 
-            end: () => {
+            end: (gameId) => {
                 sendMessageToServer({
                     client,
                     message: {
+                        gameId: gameId,
                         messageType: EVENT_QUIT_GAME
                     }
                 });
@@ -118,11 +169,12 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
                 dispatch(notifyPublishStateChange(EVENT_QUIT_GAME));
             },
 
-            playCard: (card) => {
+            playCard: ({ gameId, card }) => {
                 sendMessageToServer({
                     client,
                     message: {
                         card: card,
+                        gameId: gameId,
                         messageType: EVENT_PLAY_CARD,
                         playersName: myPlayersName
                     }
@@ -136,6 +188,7 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
             },
 
             start: ({ gameId, numberOfPlayers, playerNames, teamA, teamB }) => {
+                exports.setGameIdCookie(gameId);
                 dispatch(setGameId(gameId));
 
                 sendMessageToServer({
@@ -156,6 +209,7 @@ export function mapDispatchToPropsForMessaging(initialState, client) {
             },
 
             join: (gameId) => {
+                exports.setGameIdCookie(gameId);
                 dispatch(joinGame(gameId));
                 dispatch(notifyPublishStateChange(EVENT_JOIN_GAME));
             }
@@ -167,6 +221,9 @@ export function subscribeToGameMessages({ client, dispatch }) {
     client.subscribe('/game/client', function (message) {
         console.log('Game message came in: ' + JSON.stringify(message));
         dispatch(processMessage(message));
+        if (message.gameState===GAME_OVER) {
+            exports.clearCookies();
+        }
     })
         .then(function () {
             console.log('Game subscription to the server is activated! args=' + JSON.stringify(arguments));

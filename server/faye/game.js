@@ -105,7 +105,7 @@ function getPlayerForGame(theGame, message) {
 }
 
 function drawCard({ client, message }) {
-    const theGame = exports.getGameById(gameId);
+    const theGame = exports.getGameById(message.gameId);
     const newCard = theGame.gameDeck.pop();
     sendMessage({
         client, 
@@ -118,7 +118,7 @@ function drawCard({ client, message }) {
 }
 
 function choosePlayer({ client, message }) {
-    const theGame = exports.getGameById(gameId);
+    const theGame = exports.getGameById(message.gameId);
     const player = getPlayerForGame(theGame, message);
     player.team = message.team;
     player.isSelected = true;
@@ -166,7 +166,7 @@ function quitTheGame({ client, gameId }) {
 }
 
 function playTheCard({ client, message }) {
-    const theGame = exports.getGameById(gameId);
+    const theGame = exports.getGameById(message.gameId);
     const player = getPlayerForGame(theGame, message);
     player.hand = player.hand.filter(card => card.id === message.card.id);
     // Notify all users that the card has been played
