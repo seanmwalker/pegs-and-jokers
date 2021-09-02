@@ -42,7 +42,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --inspect server.js --exec babel-node",
-    "build": "webpack --mode productio && babel server.js server/** -d dist"
+    "build": "webpack --mode production && babel server.js server/** -d dist"
   },
   "repository": {
     "type": "git",
