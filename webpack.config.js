@@ -6,14 +6,16 @@ const {
     CleanWebpackPlugin
 } = require('clean-webpack-plugin');
 
-const copyPlugin = new CopyWebpackPlugin([
-    { from: '**/*.woff', to: '.', context: 'client/' },
-    { from: '**/*.svg', to: '.', context: 'client/' },
-    { from: '**/*.gif', to: '.', context: 'client/' },
-    { from: '**/*.css', to: '.', context: 'client/' },
-    { from: '**/*.jpg', to: '.', context: 'client/' },
-    { from: '**/*.png', to: '.', context: 'client/' }
-]);
+const copyPlugin = new CopyWebpackPlugin({
+    patterns: [
+        { from: '**/*.woff', to: '.', context: 'client/' },
+        { from: '**/*.svg', to: '.', context: 'client/' },
+        { from: '**/*.gif', to: '.', context: 'client/' },
+        { from: '**/*.css', to: '.', context: 'client/' },
+        { from: '**/*.jpg', to: '.', context: 'client/' },
+        { from: '**/*.png', to: '.', context: 'client/' }
+    ]
+});
 
 
 module.exports = {
